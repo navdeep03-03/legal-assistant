@@ -1,15 +1,53 @@
-.env
-.venv/
+﻿# Cleaned .gitignore for the project
+
+# Python byte-compiled files
 __pycache__/
 *.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.envrc
+.venv/
+venv/
+env/
+
+# Test / coverage
 .pytest_cache/
-.ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
-*.tsbuildinfo
+
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# SQLite and data
+*.sqlite3
 data/
 backend/data/
+
+# Frontend
 frontend/node_modules/
 frontend/dist/
-*.sqlite3
+*.tsbuildinfo
+
+# Logs and temp files
+logs/
+*.log
+tempCodeRunnerFile.py
+
+# OS files
 .DS_Store
+
+# IDEs
+.vscode/
+
+# Misc
+.ipynb_checkpoints/
