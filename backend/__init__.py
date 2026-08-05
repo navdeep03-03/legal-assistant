@@ -1,0 +1,1 @@
+"""Legal assistant backend package."""

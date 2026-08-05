@@ -1,0 +1,1 @@
+"""FastAPI legal retrieval application."""
