@@ -3,7 +3,7 @@ name = "counsel-legal-assistant"
 version = "1.0.0"
 description = "Grounded legal document assistant with FastAPI and React."
 readme = "README.md"
-requires-python = ">=3.12,<3.15"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi==0.116.1",
     "uvicorn[standard]==0.35.0",
