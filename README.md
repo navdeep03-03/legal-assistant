@@ -2,7 +2,7 @@
 
 Counsel is a runnable end-to-end RAG application for asking questions about contracts, policies, agreements, and legal notes. It uploads and indexes PDF, DOCX, TXT, and Markdown files, searches only the active tenant's corpus, and returns structured answers with validated clause citations, risk flags, confidence, warnings, and source-document metadata.
 
-The app is intentionally usable without an API key: local demo mode uses deterministic hashing embeddings and an extractive answer. Add an OpenAI API key to enable semantic embeddings and grounded synthesis through the Responses API.
+The app is intentionally usable without an API key: local demo mode uses deterministic hashing embeddings and an extractive answer. Add a Mistral API key to enable grounded synthesis through the Mistral chat API; OpenAI remains available as an optional provider and for semantic embeddings.
 
 > This software provides document analysis, not legal advice. Authentication headers in the demo are context scaffolding, not a production identity system.
 
@@ -14,13 +14,13 @@ flowchart LR
     API --> ORCH[Query orchestration]
     API --> INGEST[Ingestion pipeline]
     INGEST --> EXTRACT[PDF / DOCX / text extraction]
-    EXTRACT --> CHUNK[Clause-aware chunks]
+    EXTRACT --> CHUNK[Clause-aware overlapping chunks]
     CHUNK --> EMBED[OpenAI or local embeddings]
     EMBED --> DB[(PostgreSQL / SQLite)]
-    ORCH --> RETRIEVE[FAISS semantic retrieval]
+    ORCH --> RETRIEVE[Hybrid BM25 + vector retrieval]
     DB --> RETRIEVE
     RETRIEVE --> PROMPT[Grounded prompt + source IDs]
-    PROMPT --> LLM[OpenAI Responses API]
+    PROMPT --> LLM[Mistral / OpenAI / local fallback]
     LLM --> VALIDATE[Citation validation]
     VALIDATE --> API
 ```
@@ -30,7 +30,7 @@ Core features:
 - Tenant- and document-scoped retrieval with `X-Tenant-ID` and `X-User-ID` context.
 - PDF, DOCX, TXT, and Markdown extraction; scanned PDFs fail clearly and can be extended with OCR.
 - Clause classification for termination, confidentiality, indemnity, liability, payment, governing law, privacy, IP, force majeure, and warranty.
-- FAISS inner-product search with an automatic NumPy fallback.
+- Hybrid retrieval that combines vector similarity, BM25 keyword ranking, and exact case/entity phrase boosts.
 - Grounded JSON-schema answers; model citation IDs are checked against retrieved chunks before returning them.
 - Conversation history, document registry, duplicate detection, local object storage, and SQLite/PostgreSQL support.
 - Responsive evidence-first React interface with uploads, corpus filters, summaries, risk flags, and a source inspector.
@@ -59,18 +59,35 @@ npm run dev
 
 Open `http://localhost:5173`, upload [`samples/sample-contract.md`](samples/sample-contract.md), and try: “What are the termination clauses?” FastAPI's interactive API documentation is at `http://localhost:8000/docs`.
 
-### Enable OpenAI mode
+### Enable Mistral answers
 
 Set this in `.env` and restart the API:
 
 ```dotenv
+LLM_PROVIDER=mistral
+MISTRAL_API_KEY=...
+MISTRAL_MODEL=mistral-large-latest
+MISTRAL_REASONING_EFFORT=none
+MISTRAL_TEMPERATURE=0.2
+EMBEDDING_PROVIDER=local
+```
+
+Mistral is used for answer synthesis only. The current embedding providers are `local` and `openai`; use `EMBEDDING_PROVIDER=local` for a Mistral-only setup, or keep `OPENAI_API_KEY` plus `EMBEDDING_PROVIDER=auto` if you want OpenAI embeddings. The Mistral integration uses the `mistralai` SDK with chat completions and JSON-schema response format.
+
+### Optional OpenAI provider
+
+Set this in `.env` if you want OpenAI answer synthesis or OpenAI embeddings:
+
+```dotenv
+LLM_PROVIDER=openai
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-5.6-sol
+OPENAI_REASONING_EFFORT=medium
 EMBEDDING_PROVIDER=auto
 EMBEDDING_MODEL=text-embedding-3-small
 ```
 
-`gpt-5.6-sol` is the current flagship default selected for this build. For lower cost, set `OPENAI_MODEL=gpt-5.6-terra` after evaluating it on representative legal questions. The integration uses the Responses API, medium reasoning effort, structured outputs, `store=false`, and a hashed privacy-preserving safety identifier. See the official [model guidance](https://developers.openai.com/api/docs/guides/latest-model) and [`text-embedding-3-small` model page](https://developers.openai.com/api/docs/models/text-embedding-3-small).
+The OpenAI integration uses the Responses API, structured outputs, `store=false`, and a hashed privacy-preserving safety identifier.
 
 Changing the embedding provider or model changes vector dimensions. Delete/re-upload existing demo documents (or run a migration/re-index job in production) after changing it.
 
@@ -100,14 +117,15 @@ curl -X POST http://localhost:8000/api/v1/ask \
 
 The response includes `answer`, `citations`, `risk_flags`, `confidence`, `warning`, `source_documents`, `conversation_id`, `retrieval_used`, and `mode`.
 
-## Run with Docker
+## Deploy on Vercel
 
-```powershell
-$env:OPENAI_API_KEY="sk-..."  # optional
-docker compose up --build
-```
+This repository includes a Vercel entrypoint at `api/index.py` and a `vercel.json`
+that builds the React frontend from `frontend/` while serving FastAPI under
+`/api/v1`.
 
-Open `http://localhost:3000`. Docker Compose runs React behind nginx, FastAPI, and PostgreSQL; uploaded originals use a named local volume.
+The default Vercel runtime uses SQLite and uploaded files under `/tmp`, which is
+useful for a demo but not durable. For production use, set `DATABASE_URL` to a
+managed database and move originals to object storage.
 
 ## Test and build
 
@@ -138,5 +156,6 @@ backend/app/services/     Extraction, chunking, embeddings, retrieval, orchestra
 backend/tests/            API, isolation, and chunking tests
 frontend/src/             React client and evidence-first UI
 samples/                  Fictional contract for trying the app
-docker-compose.yml        PostgreSQL + API + nginx deployment
+api/index.py              Vercel FastAPI entrypoint
+vercel.json               Vercel build, function, and rewrite configuration
 ```

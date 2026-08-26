@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal
@@ -8,11 +9,28 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
+def _default_data_dir() -> Path:
+    if os.getenv("VERCEL"):
+        return Path("/tmp/legal_assistant")
+    return Path("./data")
+
+
+def _default_database_url() -> str:
+    if os.getenv("VERCEL"):
+        return "sqlite:////tmp/legal_assistant/legal_assistant.sqlite3"
+    return "sqlite:///./data/legal_assistant.sqlite3"
+
+
 class Settings(BaseSettings):
     app_name: str = "Counsel Legal Assistant"
     environment: Literal["development", "test", "production"] = "development"
     api_prefix: str = "/api/v1"
 
+    llm_provider: Literal["auto", "mistral", "openai", "local"] = "auto"
+    mistral_api_key: str | None = None
+    mistral_model: str = "mistral-large-latest"
+    mistral_reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh"] = "none"
+    mistral_temperature: float = 0.2
     openai_api_key: str | None = None
     openai_model: str = "gpt-5.6-sol"
     openai_reasoning_effort: Literal["none", "low", "medium", "high", "xhigh", "max"] = "medium"
@@ -20,8 +38,8 @@ class Settings(BaseSettings):
     embedding_provider: Literal["auto", "openai", "local"] = "auto"
     local_embedding_dimensions: int = 384
 
-    database_url: str = "sqlite:///./data/legal_assistant.sqlite3"
-    data_dir: Path = Path("./data")
+    database_url: str = Field(default_factory=_default_database_url)
+    data_dir: Path = Field(default_factory=_default_data_dir)
     app_api_key: str | None = None
     require_identity_headers: bool = False
     allowed_origins: Annotated[list[str], NoDecode] = Field(
@@ -30,8 +48,8 @@ class Settings(BaseSettings):
 
     max_upload_mb: int = 20
     top_k: int = 6
-    chunk_size: int = 1_400
-    chunk_overlap: int = 220
+    chunk_size: int = 500
+    chunk_overlap: int = 100
     max_context_characters: int = 28_000
 
     model_config = SettingsConfigDict(

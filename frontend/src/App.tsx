@@ -301,7 +301,7 @@ function App() {
           </div>
           <div className="header-status">
             <span className={`status-dot ${health ? '' : 'status-dot--offline'}`} />
-            <span>{health?.mode === 'openai' ? health.model : health ? 'Local demo' : 'Connecting'}</span>
+            <span>{health?.mode === 'local-demo' ? 'Local demo' : health ? health.model : 'Connecting'}</span>
           </div>
           <div className="corpus-pill"><FolderOpen size={15} /> {selectedDocuments.length || 'All'} source{selectedDocuments.length === 1 ? '' : 's'}</div>
         </header>
@@ -358,7 +358,7 @@ function App() {
                         )}
                         <div className="answer-meta">
                           <span className={`confidence confidence--${message.response.confidence}`}>{message.response.confidence} confidence</span>
-                          <span>{message.response.mode === 'openai' ? 'Grounded synthesis' : 'Extractive demo'}</span>
+                          <span>{message.response.mode === 'local-demo' ? 'Extractive demo' : 'Grounded synthesis'}</span>
                         </div>
                       </>
                     )}

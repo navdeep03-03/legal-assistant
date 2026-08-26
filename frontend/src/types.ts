@@ -38,12 +38,12 @@ export type AskResponse = {
   source_documents: string[]
   conversation_id: string
   retrieval_used: boolean
-  mode: 'openai' | 'local-demo'
+  mode: 'mistral' | 'openai' | 'local-demo'
 }
 
 export type Health = {
   status: string
-  mode: 'openai' | 'local-demo'
+  mode: 'mistral' | 'openai' | 'local-demo'
   model: string
   embedding_model: string
   vector_engine: string
@@ -56,4 +56,3 @@ export type ChatMessage = {
   response?: AskResponse
   pending?: boolean
 }
-

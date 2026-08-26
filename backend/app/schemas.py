@@ -80,7 +80,7 @@ class AskResponse(BaseModel):
     source_documents: list[str]
     conversation_id: str
     retrieval_used: bool
-    mode: Literal["openai", "local-demo"]
+    mode: Literal["mistral", "openai", "local-demo"]
 
 
 class SearchResult(BaseModel):
@@ -101,7 +101,7 @@ class SearchResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
-    mode: Literal["openai", "local-demo"]
+    mode: Literal["mistral", "openai", "local-demo"]
     model: str
     embedding_model: str
     vector_engine: str

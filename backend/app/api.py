@@ -25,13 +25,12 @@ router = APIRouter()
 
 @router.get("/health", response_model=HealthResponse, tags=["system"])
 def health(request: Request) -> HealthResponse:
-    settings = request.app.state.settings
     embeddings = request.app.state.embeddings
     orchestrator = request.app.state.orchestrator
     return HealthResponse(
         status="ok",
-        mode="openai" if orchestrator.generator else "local-demo",
-        model=settings.openai_model,
+        mode=orchestrator.mode,
+        model=orchestrator.model_name,
         embedding_model=embeddings.model_name,
         vector_engine=request.app.state.retriever.vector_engine,
     )
