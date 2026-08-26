@@ -1,3 +1,24 @@
+[project]
+name = "counsel-legal-assistant"
+version = "1.0.0"
+description = "Grounded legal document assistant with FastAPI and React."
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+    "fastapi==0.116.1",
+    "uvicorn[standard]==0.35.0",
+    "python-multipart==0.0.20",
+    "pydantic-settings==2.10.1",
+    "SQLAlchemy==2.0.41",
+    "psycopg[binary]==3.2.9",
+    "openai>=2.8.0,<3.0.0",
+    "mistralai>=1.0.0,<2.0.0",
+    "numpy==2.3.1",
+    "faiss-cpu==1.11.0",
+    "pypdf==5.7.0",
+    "python-docx==1.2.0",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 addopts = "-q"
