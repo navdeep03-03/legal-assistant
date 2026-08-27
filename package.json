@@ -1,0 +1,9 @@
+{
+  "name": "counsel-legal-assistant-deploy",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm --prefix frontend run build",
+    "vercel-build": "npm --prefix frontend run build"
+  }
+}
